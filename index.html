@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Excel ke Database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload File Excel ke Database</h1>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="excelFile">Pilih File Excel:</label>
+                <input type="file" id="excelFile" name="excelFile" accept=".xlsx, .xls" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="tableName">Nama Tabel Database:</label>
+                <input type="text" id="tableName" name="tableName" placeholder="contoh: data_pelanggan" required>
+            </div>
+            
+            <button type="submit">Upload dan Proses</button>
+        </form>
+        
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('excelFile');
+            const tableName = document.getElementById('tableName').value;
+            
+            formData.append('excelFile', fileInput.files[0]);
+            formData.append('tableName', tableName);
+            
+            const messageDiv = document.getElementById('message');
+            messageDiv.style.display = 'none';
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.style.display = 'block';
+                if (data.success) {
+                    messageDiv.className = 'message success';
+                    messageDiv.innerHTML = `
+                        <strong>Sukses!</strong> ${data.message}<br>
+                        <strong>Nama Tabel:</strong> ${data.table_name}<br>
+                        <strong>Jumlah Data:</strong> ${data.row_count}<br>
+                        <strong>Kolom:</strong> ${data.columns.join(', ')}
+                    `;
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Error: ' + data.message;
+                }
+            })
+            .catch(error => {
+                messageDiv.style.display = 'block';
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>
